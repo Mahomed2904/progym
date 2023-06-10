@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+    <head>
+        <meta charset="UTF-8">
+         <title>Autenticacao</title>
+         <link rel="stylesheet" href="./styles/secretaria.css">
+         <script src="./js/jquery-3.6.0.min.js"></script>
+         <script src="./js/react.development.js" crossorigin></script>
+         <script src="./js/react-dom.development.js" crossorigin></script>
+         <script src="./js/babel.min.js"></script>
+         <script src="./js/secretaria.js"></script>
+    </head>
+
+    <body class="fundo-1">
+        <div>
+            <header id="cabecalho">
+                <div class="titulo">
+                    <h1><span class="titulo-equerda">Pro</span><span class="titulo-direita">Gym</span></h1>
+                </div>
+                <div class="pesquisa">
+                    <form>
+                        <div id="barra-pesquisa">
+                            <img class="icone-pesquisa" src="./images/search.svg">
+                            <input id="pesquisa" placeholder="Pesquise aqui o que deseja saber"/>
+                        </div>
+                    </form>
+                </div>
+                <div class="menu">
+                    <ul class="list-items" >
+                        <a class="menu-item" href="#">
+                            <li>Inicio</li>
+                        </a>
+    
+                        <a class="menu-item" href="#">
+                            <li>Sobre</li>
+                        </a>
+    
+                        <a class="menu-item" href="#">
+                            <li>Serviços</li>
+                        </a>
+                    </ul>
+                </div>
+            </header>
+        </div>
+        
+        <main id="corpo">
+            <div id="painel-central">
+                <div id="div-login">
+                    <h2>Autenticação</h2>
+                    <form id="login" action="autenticacao" method="get" novalidate>
+                        <input type="hidden" value="aut" name="op">
+                        <div class="form-element">
+                            <label for="email">Email</label><br>
+                            <div class="element">
+                                <input type="email" class="login" id="email" name="email">
+                                <span id="email-status" class="status-message"></span>
+                            </div>
+                        </div>
+                        <div class="form-element">
+                            <label for="senha">Senha:</label>
+                            <div class="element">
+                                <input type="password" class="login" id="senha" name="senha"> 
+                                <span id="senha-status" class="status-message"></span>
+                            </div>
+                        </div>
+                        <div class="botao-status">
+                            <span id="login-status" class="status-message"></span>
+                            <input id="botao-submeter" class="detalhes-botao" type="submit" value="Iniciar sessão">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer id="rodape">
+
+        </footer>
+    </body>
+</html>

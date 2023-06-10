@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Informacoes do aluno</title>
+    <link rel="stylesheet" href="./styles/secretaria.css">
+    <script src="./js/jquery-3.6.0.min.js"></script>
+    <script src="./js/react.development.js" crossorigin></script>
+    <script src="./js/react-dom.development.js" crossorigin></script>
+    <script src="./js/babel.min.js"></script>
+    <script src="./js/Components.js" type="text/babel"></script>
+    <script src="./js/secretaria.js"></script>
+</head>
+
+<body class="fundo-2">
+    <div>
+        <header id="cabecalho">
+            <div class="titulo">
+                <h1><span class="titulo-equerda">Pro</span><span class="titulo-direita">Gym</span></h1>
+            </div>
+            <div class="pesquisa">
+                <form>
+                    <div id="barra-pesquisa">
+                        <img class="icone-pesquisa" src="./images/search.svg">
+                        <input id="pesquisa" placeholder="Pesquise pela lista de alunos" />
+                    </div>
+                </form>
+            </div>
+            <div class="outros">
+                <div class="utilizador">
+                    <div id="tipo-utilizador">
+                        <span>Scretaria: </span>
+                    </div>
+                    <div id="nome-utilizador">
+                        <span>Atija Manuel</span>
+                    </div>
+                </div>
+                <div id="sair">
+                    <span>Sair</span>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <main id="corpo">
+        <div id="painel-esquerdo-1" class="painel-esquerdo-detalhes">
+            <div class="descricao decricao-detalhes">
+                <h2>Menu</h2>
+            </div>
+
+            <div class="div-botao">
+                <button id="lista" class="botao-1 detalhes-botao"><span class="texto-botao">Lista de
+                        alunos</span></button>
+                <button id="matricula" class="botao-1 detalhes-botao"><span
+                        class="texto-botao">Matricular aluno</span></button>
+            </div>
+        </div>
+        <div id="painel-central-2" class="change-bg">
+            <div class="tipo-dados">
+                <div class="tema">
+                    <h1><span>Informações da matricula</span></h1>
+                </div>
+
+                <div class="cima">
+                    <div>
+                        <h2><span>Dados pessoais</span></h2>
+                    </div>
+                    <div id="dados-pessoais" class="horizontal">
+                       
+                    </div>
+                </div>
+
+                <div class="baixo">
+                    <div>
+                        <h2><span>Atividades matriculadas</span></h2>
+                    </div>
+                    <div id="lista-matriculas">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="rodape">
+
+    </footer>
+</body>
+
+</html>

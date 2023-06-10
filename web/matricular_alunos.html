@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+    <head>
+         <meta charset="utf-8" />
+         <title>Gerir Aluno</title>
+         <link rel="stylesheet" href="./styles/secretaria.css">
+         <script src="./js/jquery-3.6.0.min.js"></script>
+         <script src="./js/react.development.js" crossorigin></script>
+         <script src="./js/react-dom.development.js" crossorigin></script>
+         <script src="./js/babel.min.js"></script>
+         <script src="./js/Components.js" type="text/babel"></script>
+         <script src="./js/secretaria.js"></script>
+    </head>
+
+    <body class="fundo-2">
+        <div>
+            <header id="cabecalho">
+                <div class="titulo">
+                    <h1><span class="titulo-equerda">Pro</span><span class="titulo-direita">Gym</span></h1>
+                </div>
+                <div class="pesquisa">
+                    <form>
+                        <div id="barra-pesquisa">
+                            <img class="icone-pesquisa" src="./images/search.svg">
+                            <input id="pesquisa" placeholder="Pesquise pela lista de alunos"/>
+                        </div>
+                    </form>
+                </div>
+                <div class="outros">
+                    <div class="utilizador">
+                        <div id="tipo-utilizador">
+                            <span>Scretaria: </span>
+                         </div>
+                         <div id="nome-utilizador">
+                             <span>Atija Manuel</span>
+                         </div>
+                    </div>
+                    <div id="sair">
+                        <span>Sair</span>
+                    </div>
+                </div>
+            </header>
+        </div>
+        
+        <main id="corpo">
+            <div id="painel-esquerdo-1" class="painel-esquerdo-detalhes">
+                <div class="descricao decricao-detalhes">
+                    <h2>Menu</h2>
+                </div>
+
+                <div class="div-botao">
+                    <button id="lista" class="botao-1 detalhes-botao"><span class="texto-botao">Lista de alunos</span></button>
+                    <button id="matricula" class="botao-1 detalhes-botao botao-1-selected"><span class="texto-botao">Matricular aluno</span></button>
+                </div>  
+            </div>
+            <div id="painel-central" class="change-bg">
+                <div class="tipo-dados">
+                    <div class="tema">
+                        <h1><span>Dados do aluno</span></h1>
+                    </div>
+                    <form id="matricula-form" class="form-dados" action="matricula" enctype="multipart/form-data">
+                        <input type="hidden" name="op" value="add">
+                        <div class="cima">
+                            <div>
+                                <h2><span>Dados pessoais</span></h2>
+                            </div>
+                            <div class="horizontal">
+                                <div class="form-esquerdo">
+                                    <div class="campo">
+                                        <label for="nome">Nome</label>
+                                        <div class="element">
+                                            <input type="text" id="nome" name="nome">
+                                            <span id="nome-status" class="status-message"></span>
+                                        </div>
+                                    </div>
+                                    <div class="campo">
+                                        <label for="data">Data de nascimento</label>
+                                        <div class="element">
+                                            <input type="date" id="data" name="data">
+                                            <span id="data-status" class="status-message"></span>
+                                        </div>
+                                    </div>
+                                    <div class="campo">
+                                        <label for="email">Email</label>
+                                        <div class="element">
+                                            <input type="email" id="email" name="email">
+                                            <span id="email-status" class="status-message"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                               
+                                <div class="form-direito">
+                                    <div id="div-foto" class="foto">
+                                        <label for="foto">Upload image</label>
+                                        <input type="file" acept="image/*" id="foto" name="foto" enctype="multipart/form-data">
+                                        <span id="foto-status" class="status-message"></span>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="baixo">
+                            <div>
+                                <h2><span>Atividades a matricular</span></h2>
+                            </div>
+                            <div class="horizontal">
+                                <div class="form-esquerdo-2">
+                                    <div id="actsi" class="campo-1">
+                                        <select id="acts" size="8" multiple>
+                                            
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-centro">
+                                    <div class="campo">
+                                       <button id="passar">>></button>
+                                    </div>
+                                    <div class="campo">
+                                       <button id="passar-todos">>>></button>
+                                    </div>
+                                    <div class="campo">
+                                       <button id="tirar"><<</button>
+                                    </div>
+                                    <div class="campo">
+                                       <button id="tirar-todos"><<<</button>
+                                    </div>
+                                </div>      
+                                <div class="form-direito-2">
+                                    <div class="campo-1">
+                                        <label for="atividades"></label>
+                                        <select id="atividades" name="atividades" size="8" multiple>
+                                            
+                                        </select>
+                                        <span id="atividades-status" class="status-message"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="baixo">
+                            <button id="submeter-matricula" class="detalhes-botao">Proximo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer id="rodape">
+
+        </footer>
+    </body>
+</html>
