@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Atividade;
 import modelo.Contrato;
 import modelo.CoordenaçãoDesportiva;
@@ -26,16 +28,18 @@ import modelo.CoordenaçãoDesportiva;
  */
 public class CoordenaçãoDesportivaJpaController implements Serializable {
 
-    public CoordenaçãoDesportivaJpaController(EntityManagerFactory emf) {
+    public CoordenaçãoDesportivaJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(CoordenaçãoDesportiva coordenaçãoDesportiva) {
+    public void create(CoordenaçãoDesportiva coordenaçãoDesportiva) throws RollbackFailureException, Exception {
         if (coordenaçãoDesportiva.getFilialList() == null) {
             coordenaçãoDesportiva.setFilialList(new ArrayList<Filial>());
         }
@@ -47,8 +51,8 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             List<Filial> attachedFilialList = new ArrayList<Filial>();
             for (Filial filialListFilialToAttach : coordenaçãoDesportiva.getFilialList()) {
                 filialListFilialToAttach = em.getReference(filialListFilialToAttach.getClass(), filialListFilialToAttach.getFilialID());
@@ -95,7 +99,14 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
                     oldCoordenaçãoDesportivaIDOfContratoListContrato = em.merge(oldCoordenaçãoDesportivaIDOfContratoListContrato);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -103,11 +114,11 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
         }
     }
 
-    public void edit(CoordenaçãoDesportiva coordenaçãoDesportiva) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(CoordenaçãoDesportiva coordenaçãoDesportiva) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             CoordenaçãoDesportiva persistentCoordenaçãoDesportiva = em.find(CoordenaçãoDesportiva.class, coordenaçãoDesportiva.getCoordenaçãoDesportivaID());
             List<Filial> filialListOld = persistentCoordenaçãoDesportiva.getFilialList();
             List<Filial> filialListNew = coordenaçãoDesportiva.getFilialList();
@@ -196,8 +207,13 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = coordenaçãoDesportiva.getCoordenaçãoDesportivaID();
@@ -213,11 +229,11 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             CoordenaçãoDesportiva coordenaçãoDesportiva;
             try {
                 coordenaçãoDesportiva = em.getReference(CoordenaçãoDesportiva.class, id);
@@ -249,7 +265,14 @@ public class CoordenaçãoDesportivaJpaController implements Serializable {
                 contratoListContrato = em.merge(contratoListContrato);
             }
             em.remove(coordenaçãoDesportiva);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

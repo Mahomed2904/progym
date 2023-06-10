@@ -5,24 +5,30 @@
 package maps;
 
 import com.google.gson.Gson;
+import controlador.SecretáriaJpaController;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.transaction.UserTransaction;
 import modelo.Secretária;
-import servicos.GestaoAluno;
 import utils.Converter;
-import utils.Estado;
+import utils.Status;
+import utils.Utils;
 
 /**
  *
- * @author mahomed
+ * @author mahom
  */
-@WebServlet(name = "autenticacao", urlPatterns = {"/autenticacao"})
 public class Autenticacao extends HttpServlet {
 
     /**
@@ -39,8 +45,16 @@ public class Autenticacao extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         try ( PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
+            EntityManagerFactory emf = Persistence.createEntityManagerFactory("ProGymPU");
             
-            GestaoAluno gestaoAluno = new GestaoAluno();
+            UserTransaction ut = null;
+            try {
+                ut = InitialContext.doLookup("java:comp/UserTransaction");
+            } catch (NamingException ex) {
+                Logger.getLogger(Autenticacao.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            SecretáriaJpaController secretáriaCtrl = new SecretáriaJpaController(ut, emf);
+            
             String operacao = request.getParameter("op");
             
             switch(operacao) {
@@ -48,43 +62,32 @@ public class Autenticacao extends HttpServlet {
                     {
                         String email = request.getParameter("email");
                         String senha = request.getParameter("senha");
-                        Estado estado = gestaoAluno.autenticarSecretária(email, senha);
-                        
-                        if(estado.getCodigo() == 0) {
-                            HttpSession sessao = request.getSession();
-                            Secretária secretaria = (Secretária) estado.getAnexo();
-                            sessao.setAttribute("secretariaID", secretaria.getSecretáriaID());
-                            sessao.setAttribute("nome", secretaria.getNome());
+
+                        Secretária secretária  = Utils.findSecretáriaWidthEmailAndPassword(email, senha, secretáriaCtrl.findSecretáriaEntities());
+
+                        if(secretária == null) {
+                            out.print(new Gson().toJson(new Status(1, "A secretária com as credenciais digitadas não foi encontrada")));
+                            return;
                         }
-                        
-                        out.print(Converter.partialEstadoToJSON(estado));
-                        System.out.println(Converter.partialEstadoToJSON(estado));
+
+                        out.print(new Gson().toJson(new Status(0, "Cadastro efetuado com sucesso")));
+
+                        HttpSession sessao = request.getSession();
+                        sessao.setAttribute("secretariaID", secretária.getSecretáriaID());
+                        sessao.setAttribute("nome", secretária.getNome());
                     }
                     break;
                 case "inf":
                     {
                         HttpSession sessao = request.getSession();
                         if( sessao.getAttribute("secretariaID") == null ) {
-                            out.print(gestaoAluno.getErroDeAutenticacao());
+                            out.print(new Gson().toJson(new Status(1, "Autenticação necessária")));
                             return;
                         }
                         
                         int secretáriaID = (int) sessao.getAttribute("secretariaID");
-                        Estado estado = gestaoAluno.informacoesDaSecretária(secretáriaID);
-                        out.print( Converter.allEstadoToJSON(estado) );
-                    }
-                    break;
-                case "sir":
-                    {
-                        HttpSession sessao = request.getSession();
-                        sessao.removeAttribute("secretariaID");
-                        sessao.removeAttribute("pesquisa");
-                        sessao.removeAttribute("matricula");
-                        sessao.removeAttribute("mensalidade");
-                        sessao.removeAttribute("atividade");
-                        
-                        Estado estado = gestaoAluno.terminarSessão();
-                        out.print( Converter.partialEstadoToJSON(estado) );
+                        Secretária secretária = secretáriaCtrl.findSecretária(secretáriaID);
+                        out.print(Converter.secretáriaToJSON(secretária));
                     }
             }
         }

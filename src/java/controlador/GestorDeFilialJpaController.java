@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.GestorDeFilial;
 import modelo.RelatorioDiário;
 
@@ -25,16 +27,18 @@ import modelo.RelatorioDiário;
  */
 public class GestorDeFilialJpaController implements Serializable {
 
-    public GestorDeFilialJpaController(EntityManagerFactory emf) {
+    public GestorDeFilialJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(GestorDeFilial gestorDeFilial) {
+    public void create(GestorDeFilial gestorDeFilial) throws RollbackFailureException, Exception {
         if (gestorDeFilial.getFilialList() == null) {
             gestorDeFilial.setFilialList(new ArrayList<Filial>());
         }
@@ -43,8 +47,8 @@ public class GestorDeFilialJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             List<Filial> attachedFilialList = new ArrayList<Filial>();
             for (Filial filialListFilialToAttach : gestorDeFilial.getFilialList()) {
                 filialListFilialToAttach = em.getReference(filialListFilialToAttach.getClass(), filialListFilialToAttach.getFilialID());
@@ -76,7 +80,14 @@ public class GestorDeFilialJpaController implements Serializable {
                     oldGestorDeFilialIDOfRelatorioDiárioListRelatorioDiário = em.merge(oldGestorDeFilialIDOfRelatorioDiárioListRelatorioDiário);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -84,11 +95,11 @@ public class GestorDeFilialJpaController implements Serializable {
         }
     }
 
-    public void edit(GestorDeFilial gestorDeFilial) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(GestorDeFilial gestorDeFilial) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             GestorDeFilial persistentGestorDeFilial = em.find(GestorDeFilial.class, gestorDeFilial.getGestorDeFilialID());
             List<Filial> filialListOld = persistentGestorDeFilial.getFilialList();
             List<Filial> filialListNew = gestorDeFilial.getFilialList();
@@ -149,8 +160,13 @@ public class GestorDeFilialJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = gestorDeFilial.getGestorDeFilialID();
@@ -166,11 +182,11 @@ public class GestorDeFilialJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             GestorDeFilial gestorDeFilial;
             try {
                 gestorDeFilial = em.getReference(GestorDeFilial.class, id);
@@ -195,7 +211,14 @@ public class GestorDeFilialJpaController implements Serializable {
                 relatorioDiárioListRelatorioDiário = em.merge(relatorioDiárioListRelatorioDiário);
             }
             em.remove(gestorDeFilial);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

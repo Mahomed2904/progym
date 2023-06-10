@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Cobranca;
 import modelo.Matricula;
 
@@ -28,16 +30,18 @@ import modelo.Matricula;
  */
 public class MatriculaJpaController implements Serializable {
 
-    public MatriculaJpaController(EntityManagerFactory emf) {
+    public MatriculaJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Matricula matricula) {
+    public void create(Matricula matricula) throws RollbackFailureException, Exception {
         if (matricula.getPagamentoList() == null) {
             matricula.setPagamentoList(new ArrayList<Pagamento>());
         }
@@ -46,8 +50,8 @@ public class MatriculaJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Aluno alunoID = matricula.getAlunoID();
             if (alunoID != null) {
                 alunoID = em.getReference(alunoID.getClass(), alunoID.getAlunoID());
@@ -106,7 +110,14 @@ public class MatriculaJpaController implements Serializable {
                     oldMatriculaIDOfCobrancaListCobranca = em.merge(oldMatriculaIDOfCobrancaListCobranca);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -114,11 +125,11 @@ public class MatriculaJpaController implements Serializable {
         }
     }
 
-    public void edit(Matricula matricula) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Matricula matricula) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Matricula persistentMatricula = em.find(Matricula.class, matricula.getMatriculaID());
             Aluno alunoIDOld = persistentMatricula.getAlunoID();
             Aluno alunoIDNew = matricula.getAlunoID();
@@ -221,8 +232,13 @@ public class MatriculaJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = matricula.getMatriculaID();
@@ -238,11 +254,11 @@ public class MatriculaJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Matricula matricula;
             try {
                 matricula = em.getReference(Matricula.class, id);
@@ -282,7 +298,14 @@ public class MatriculaJpaController implements Serializable {
                 pagamentoListPagamento = em.merge(pagamentoListPagamento);
             }
             em.remove(matricula);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

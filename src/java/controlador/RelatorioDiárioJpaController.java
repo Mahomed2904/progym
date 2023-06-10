@@ -5,6 +5,7 @@
 package controlador;
 
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -13,6 +14,7 @@ import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.transaction.UserTransaction;
 import modelo.Filial;
 import modelo.GestorDeFilial;
 import modelo.RelatorioDiário;
@@ -23,20 +25,22 @@ import modelo.RelatorioDiário;
  */
 public class RelatorioDiárioJpaController implements Serializable {
 
-    public RelatorioDiárioJpaController(EntityManagerFactory emf) {
+    public RelatorioDiárioJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(RelatorioDiário relatorioDiário) {
+    public void create(RelatorioDiário relatorioDiário) throws RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Filial origem = relatorioDiário.getOrigem();
             if (origem != null) {
                 origem = em.getReference(origem.getClass(), origem.getFilialID());
@@ -56,7 +60,14 @@ public class RelatorioDiárioJpaController implements Serializable {
                 gestorDeFilialID.getRelatorioDiárioList().add(relatorioDiário);
                 gestorDeFilialID = em.merge(gestorDeFilialID);
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -64,11 +75,11 @@ public class RelatorioDiárioJpaController implements Serializable {
         }
     }
 
-    public void edit(RelatorioDiário relatorioDiário) throws NonexistentEntityException, Exception {
+    public void edit(RelatorioDiário relatorioDiário) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             RelatorioDiário persistentRelatorioDiário = em.find(RelatorioDiário.class, relatorioDiário.getRelatorioDiárioID());
             Filial origemOld = persistentRelatorioDiário.getOrigem();
             Filial origemNew = relatorioDiário.getOrigem();
@@ -99,8 +110,13 @@ public class RelatorioDiárioJpaController implements Serializable {
                 gestorDeFilialIDNew.getRelatorioDiárioList().add(relatorioDiário);
                 gestorDeFilialIDNew = em.merge(gestorDeFilialIDNew);
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = relatorioDiário.getRelatorioDiárioID();
@@ -116,11 +132,11 @@ public class RelatorioDiárioJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws NonexistentEntityException {
+    public void destroy(Integer id) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             RelatorioDiário relatorioDiário;
             try {
                 relatorioDiário = em.getReference(RelatorioDiário.class, id);
@@ -139,7 +155,14 @@ public class RelatorioDiárioJpaController implements Serializable {
                 gestorDeFilialID = em.merge(gestorDeFilialID);
             }
             em.remove(relatorioDiário);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

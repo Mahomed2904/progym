@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Pagamento;
 import modelo.Secretária;
 
@@ -25,16 +27,18 @@ import modelo.Secretária;
  */
 public class SecretáriaJpaController implements Serializable {
 
-    public SecretáriaJpaController(EntityManagerFactory emf) {
+    public SecretáriaJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Secretária secretária) {
+    public void create(Secretária secretária) throws RollbackFailureException, Exception {
         if (secretária.getMatriculaList() == null) {
             secretária.setMatriculaList(new ArrayList<Matricula>());
         }
@@ -43,8 +47,8 @@ public class SecretáriaJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             List<Matricula> attachedMatriculaList = new ArrayList<Matricula>();
             for (Matricula matriculaListMatriculaToAttach : secretária.getMatriculaList()) {
                 matriculaListMatriculaToAttach = em.getReference(matriculaListMatriculaToAttach.getClass(), matriculaListMatriculaToAttach.getMatriculaID());
@@ -76,7 +80,14 @@ public class SecretáriaJpaController implements Serializable {
                     oldSecretáriaIDOfPagamentoListPagamento = em.merge(oldSecretáriaIDOfPagamentoListPagamento);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -84,11 +95,11 @@ public class SecretáriaJpaController implements Serializable {
         }
     }
 
-    public void edit(Secretária secretária) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Secretária secretária) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Secretária persistentSecretária = em.find(Secretária.class, secretária.getSecretáriaID());
             List<Matricula> matriculaListOld = persistentSecretária.getMatriculaList();
             List<Matricula> matriculaListNew = secretária.getMatriculaList();
@@ -151,8 +162,13 @@ public class SecretáriaJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = secretária.getSecretáriaID();
@@ -168,11 +184,11 @@ public class SecretáriaJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Secretária secretária;
             try {
                 secretária = em.getReference(Secretária.class, id);
@@ -199,7 +215,14 @@ public class SecretáriaJpaController implements Serializable {
                 throw new IllegalOrphanException(illegalOrphanMessages);
             }
             em.remove(secretária);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

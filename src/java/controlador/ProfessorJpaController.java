@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Contrato;
 import modelo.Professor;
 
@@ -25,16 +27,18 @@ import modelo.Professor;
  */
 public class ProfessorJpaController implements Serializable {
 
-    public ProfessorJpaController(EntityManagerFactory emf) {
+    public ProfessorJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Professor professor) {
+    public void create(Professor professor) throws RollbackFailureException, Exception {
         if (professor.getAtividadeList() == null) {
             professor.setAtividadeList(new ArrayList<Atividade>());
         }
@@ -43,8 +47,8 @@ public class ProfessorJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             List<Atividade> attachedAtividadeList = new ArrayList<Atividade>();
             for (Atividade atividadeListAtividadeToAttach : professor.getAtividadeList()) {
                 atividadeListAtividadeToAttach = em.getReference(atividadeListAtividadeToAttach.getClass(), atividadeListAtividadeToAttach.getAtividadeID());
@@ -76,7 +80,14 @@ public class ProfessorJpaController implements Serializable {
                     oldProfessorIDOfContratoListContrato = em.merge(oldProfessorIDOfContratoListContrato);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -84,11 +95,11 @@ public class ProfessorJpaController implements Serializable {
         }
     }
 
-    public void edit(Professor professor) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Professor professor) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Professor persistentProfessor = em.find(Professor.class, professor.getProfessorID());
             List<Atividade> atividadeListOld = persistentProfessor.getAtividadeList();
             List<Atividade> atividadeListNew = professor.getAtividadeList();
@@ -149,8 +160,13 @@ public class ProfessorJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = professor.getProfessorID();
@@ -166,11 +182,11 @@ public class ProfessorJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Professor professor;
             try {
                 professor = em.getReference(Professor.class, id);
@@ -195,7 +211,14 @@ public class ProfessorJpaController implements Serializable {
                 contratoListContrato = em.merge(contratoListContrato);
             }
             em.remove(professor);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

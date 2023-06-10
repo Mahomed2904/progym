@@ -16,7 +16,6 @@ import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +31,11 @@ import modelo.Cobranca;
 import modelo.Matricula;
 import modelo.Pagamento;
 import modelo.Secretária;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 /**
  *
@@ -177,7 +181,6 @@ public class Utils {
     }
     
     public static boolean estaMatriculado(String atividade, Aluno aluno) {
-        System.out.println("Atividade: " + atividade);
         int acts = Integer.parseInt(atividade);
         
         if(acts == 0)
@@ -311,79 +314,6 @@ public class Utils {
         }
         
         return 1600.0f;
-    }
-
-    public static String getNameMonth(int month) {
-        switch (month) {
-            case 0:
-                return "Janeiro";
-            case 1:
-                return "Fevereiro";
-            case 2:
-                return "Mar\u00e7o";
-            case 3:
-                return "Abri";
-            case 4:
-                return "Maio";
-            case 5:
-                return "Junho";
-            case 6:
-                return "Julho";
-            case 7:
-                return "Agosto";
-            case 8:
-                return "Setembro";
-            case 9:
-                return "Outubro";
-            case 10:
-                return "Novembro";
-            case 11:
-                return "Desembro";
-        }
-        return "Desconhecido";
-    }
-
-    public static String formatarData(Date data) {
-        Calendar cl = Calendar.getInstance();
-        cl.setTime(data);
-        return String.format("%02d de %s de %02d", cl.get(Calendar.DAY_OF_MONTH), Utils.getNameMonth(cl.get(Calendar.MONTH)), cl.get(Calendar.YEAR));
-    }
-    
-    public static boolean validarNome(String nome) {
-        String[] partes = nome.split(" ");
-        
-        if( partes.length > 1) {
-            if(partes[0].length() >= 2)
-                return true;
-        }
-        
-        return false;
-    }
-    
-    public static boolean validarSenha(String senha) {
-        boolean maiuscula = false;
-        boolean numero = false;
-        boolean minuscula = false;
-        
-        for(char c : senha.toCharArray()) {
-            if(Character.isSpaceChar(c))
-                return false;
-            
-            if(Character.isUpperCase(c))
-                maiuscula = true;
-            
-            if(Character.isDigit(c))
-                numero = true;
-            
-            if(Character.isLowerCase(c))
-                minuscula = true;
-        }
-        
-        return maiuscula && numero && minuscula;
-    }
-    
-    public static boolean validarEmail(String email) {
-        return email.matches("\\w+([-+.']\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*");
     }
 }
 

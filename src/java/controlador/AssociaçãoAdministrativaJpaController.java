@@ -5,6 +5,7 @@
 package controlador;
 
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -13,6 +14,7 @@ import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.transaction.UserTransaction;
 import modelo.AssociaçãoAdministrativa;
 
 /**
@@ -21,22 +23,31 @@ import modelo.AssociaçãoAdministrativa;
  */
 public class AssociaçãoAdministrativaJpaController implements Serializable {
 
-    public AssociaçãoAdministrativaJpaController(EntityManagerFactory emf) {
+    public AssociaçãoAdministrativaJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(AssociaçãoAdministrativa associaçãoAdministrativa) {
+    public void create(AssociaçãoAdministrativa associaçãoAdministrativa) throws RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             em.persist(associaçãoAdministrativa);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -44,14 +55,19 @@ public class AssociaçãoAdministrativaJpaController implements Serializable {
         }
     }
 
-    public void edit(AssociaçãoAdministrativa associaçãoAdministrativa) throws NonexistentEntityException, Exception {
+    public void edit(AssociaçãoAdministrativa associaçãoAdministrativa) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             associaçãoAdministrativa = em.merge(associaçãoAdministrativa);
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = associaçãoAdministrativa.getAssociaçãoAdministrativaID();
@@ -67,11 +83,11 @@ public class AssociaçãoAdministrativaJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws NonexistentEntityException {
+    public void destroy(Integer id) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             AssociaçãoAdministrativa associaçãoAdministrativa;
             try {
                 associaçãoAdministrativa = em.getReference(AssociaçãoAdministrativa.class, id);
@@ -80,7 +96,14 @@ public class AssociaçãoAdministrativaJpaController implements Serializable {
                 throw new NonexistentEntityException("The associa\u00e7\u00e3oAdministrativa with id " + id + " no longer exists.", enfe);
             }
             em.remove(associaçãoAdministrativa);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
