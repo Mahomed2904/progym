@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package maps;
+package routes;
 
 import com.google.gson.Gson;
 import controlador.AlunoJpaController;
@@ -68,7 +68,7 @@ public class Mensalidade extends HttpServlet {
             try {
                 ut = InitialContext.doLookup("java:comp/UserTransaction");
             } catch (NamingException ex) {
-                Logger.getLogger(Autenticacao.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Autenticar.class.getName()).log(Level.SEVERE, null, ex);
             }
             
             AlunoJpaController alunoCtrl = new AlunoJpaController(ut, emf);
@@ -121,13 +121,14 @@ public class Mensalidade extends HttpServlet {
                         String banco = request.getParameter("banco");
                         
                         if(cobrancaID == -1) {
-                            Matricula matricula = matriculaCtrl.findMatricula(cobrancaID);
+                            int alunoID = (int) sessao.getAttribute("alunoID");
+                            List<Cobranca> cobrancas = Utils.findCobrancasOf(alunoID, cobrancaCtrl.findCobrancaEntities());
                             
-                            for(Cobranca cobranca : matricula.getCobrancaList()) {
+                            for(Cobranca cobranca : cobrancas) {
                                 if(!cobranca.getPago()) 
                                 {
                                     Pagamento pagamento = new Pagamento();
-                                    pagamento.setAlunoID((alunoCtrl.findAluno((int) sessao.getAttribute("alunoID"))));
+                                    pagamento.setAlunoID((alunoCtrl.findAluno(alunoID)));
                                     pagamento.setData(new Date());
                                     pagamento.setMatriculaID(cobranca.getMatriculaID());
                                     pagamento.setSecretáriaID(secretáriaCtrl.findSecretária(secretáriaID));
@@ -139,10 +140,9 @@ public class Mensalidade extends HttpServlet {
                                     pagamento.setCobrancaID(cobranca);
                                     
                                     try {
-                                        pagamentoCtrl.create(pagamento);
                                         cobranca.setPago(true);
                                         cobrancaCtrl.edit(cobranca);
-                                        out.print(gson.toJson(new Status(0, "Papagemnto efetuado com sucesso")));
+                                        pagamentoCtrl.create(pagamento);
                                     } catch (Exception ex) {
                                         ex.printStackTrace();
                                         out.print(gson.toJson(new Status(1, "Erro ao fazer o pagamento: " + ex.getMessage())));
@@ -150,6 +150,7 @@ public class Mensalidade extends HttpServlet {
                                     }
                                 }
                             }
+                            out.print(gson.toJson(new Status(0, "Papagemnto efetuado com sucesso")));
                             return;
                         }
                         

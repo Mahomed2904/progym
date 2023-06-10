@@ -351,16 +351,16 @@ function exibeAtividades() {
     })
 }
 
-function exibeAtividades2() { 
+function pesquisaEFiltro() {
     jQuery.ajax({
         type: "GET",
         url: "matricula",
-        data: "op=act",
+        data: "op=src",
         dataType: "json",
         success: function(data) {
-            data.unshift({AtividadeID: 0, nome: "Todas"});
+            
             if(data.length > 0) {
-                const container = document.getElementById("atividades");
+                const container = document.getElementById("acts");
                 const root = ReactDOM.createRoot(container);
                 root.render(<Atividades atividades={data}></Atividades>);
             }
@@ -371,48 +371,12 @@ function exibeAtividades2() {
     })
 }
 
-function pesquisaEFiltro() {
-    jQuery.ajax({
-        type: "GET",
-        url: "matricula",
-        data: {
-            op: "pes",
-            pesquisa: $("#pesquisa").val(),
-            mensalidade: $("#mensalidades").val(),
-            atividade: $("#atividades").val(),
-            matricula: $("#matriculas").val()
-        },
-        dataType: "json",
-        success: function(data) {
-            const container = document.getElementById("lista-alunos");
-            const root = ReactDOM.createRoot(container);
-            if(data.length > 0) {
-                console.log(data);
-                root.render(<Alunos alunos={data}></Alunos>);
-            } else {
-                root.render(<div class="alinhadorVertical"><div class="alinhadorHorizontal"><h1>Nenhum Aluno encontrado</h1></div></div>);
-            }
-        },
-        error: function(e) {
-            const container = document.getElementById("lista-alunos");
-            const root = ReactDOM.createRoot(container);
-            root.render(<h1>Nenhum Aluno encontrado</h1>);
-        }
-    })
-}
-
 $(function() {
     console.log(window.location.pathname);
     console.log("Aqui");
     switch(window.location.pathname) {
         case '/ProGym/menu_secretaria.html':
-            //exibirListAlunos();
-            exibeAtividades2();
-            exibirListAlunos()  ;
-            $("#pesquisa").keyup(pesquisaEFiltro);
-            $("#mensalidades").change(pesquisaEFiltro),
-            $("#atividades").change(pesquisaEFiltro),
-            $("#matriculas").change(pesquisaEFiltro);
+            exibirListAlunos();
             break;
         case '/ProGym/matricular_alunos.html':
             exibeAtividades();

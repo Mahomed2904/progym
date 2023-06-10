@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package maps;
+package routes;
 
 import com.google.gson.Gson;
 import controlador.AlunoJpaController;
@@ -82,7 +82,7 @@ public class Matricular extends HttpServlet {
             try {
                 ut = InitialContext.doLookup("java:comp/UserTransaction");
             } catch (NamingException ex) {
-                Logger.getLogger(Autenticacao.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Autenticar.class.getName()).log(Level.SEVERE, null, ex);
             }
             
             AlunoJpaController alunoCtrl = new AlunoJpaController(ut, emf);
@@ -120,22 +120,6 @@ public class Matricular extends HttpServlet {
                 }
                 System.out.println("Param " + name + ": " + sValues);
             }
-            
-            if(operation.equals("pes")) 
-            {
-                String nome = request.getParameter("pesquisa");
-                String matricula = request.getParameter("matricula");
-                String mensalidade = request.getParameter("mensalidade");
-                String atividade = request.getParameter("atividade");
-                
-                List<Aluno> alunos = alunoCtrl.findAlunoEntities();
-                String js = Converter.alunosToJSON( Utils.searchAluno(nome, atividade, mensalidade, matricula,  alunos) );
-                System.out.println(js);
-                System.out.println(alunos.size());
-                out.print( js );
-                return;
-            }
-            
             switch(operation) 
             {
                 case "add":
@@ -310,6 +294,11 @@ public class Matricular extends HttpServlet {
                         
                     }
                     break;
+                case "srh":
+                    {
+                        String nome = request.getParameter("pesquisa");
+                        out.print(Converter.alunosToJSON(Utils.searchAlunoByNome(nome, alunoCtrl.findAlunoEntities())));
+                    }
             }
         }
     }

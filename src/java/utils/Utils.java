@@ -156,77 +156,23 @@ public class Utils {
     public static List<Aluno> searchAlunoByNome(String nome, List<Aluno> alunos) {
         List<Aluno> resultado = new ArrayList<>();
         for(Aluno aluno : alunos) {
-            System.out.println("Aluno: " + aluno.getNome() + "  Chave: " + nome);
-            if(aluno.getNome().toLowerCase().contains(nome.toLowerCase()))
+            if(aluno.getNome().contains(nome))
                 resultado.add(aluno);
         }
         return resultado;
     }
     
-    public static List<Aluno> searchAluno(String nome, String atividade, String estadoMensalidade,
-            String estadoMatricula, List<Aluno> alunos) {
+    public static List<Aluno> searchAluno(String nome, String atividade, String estadoMatricula,
+            String estado pagamento, List<Aluno> alunos) {
         List<Aluno> resultado = new ArrayList<>();
+        
         for(Aluno aluno : alunos) {
-            System.out.println("Aluno: " + aluno.getNome() + "  Está matriculado: " + estaMatriculado(atividade, aluno) 
-            + " , atividade: ");
-            if(aluno.getNome().toLowerCase().contains(nome.toLowerCase())
-                    && estaMatriculado(atividade, aluno) 
-                    && eEstadoMensalidade(estadoMensalidade, aluno)
-                    && eEstadoMatriculado(estadoMatricula, aluno)) {
-                System.out.println("Adicionou...");
+            if(aluno.getNome().contains(nome))
                 resultado.add(aluno);
-            }
         }
         return resultado;
-    }
-    
-    public static boolean estaMatriculado(String atividade, Aluno aluno) {
-        int acts = Integer.parseInt(atividade);
-        
-        if(acts == 0)
-            return true;
-        
-        for(Matricula m : aluno.getMatriculaList()) {
-            if(m.getAtividadeID().getAtividadeID() == acts)
-                return true;
-        }
-        
-        return false;
-    }
-    
-    public static boolean eEstadoMensalidade(String estadoStr, Aluno aluno) {
-        int estado = Integer.parseInt(estadoStr);
-        
-        if(estado == 0)
-            return true;
-        
-        boolean decisao = estado == 1;
-        
-        for(Matricula m : aluno.getMatriculaList()) {
-            for(Cobranca c : m.getCobrancaList()) {
-                if(c.getPago() == decisao)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-    
-    public static boolean eEstadoMatriculado(String estadoStr, Aluno aluno) {
-        int estado = Integer.parseInt(estadoStr);
-        
-        if(estado == 0)
-            return true;
-        
-        
-        for(Matricula m : aluno.getMatriculaList()) {
-            if( m.getEstado() == estado )
-                return true;
-        }
+    }       
             
-        return false;
-    }
-    
     public static Secretária findSecretáriaWidthEmailAndPassword(String email, String senha, List<Secretária> secretárias) {
         for(Secretária secretária : secretárias) {
             if(email.equals(secretária.getEmail()) && senha.equals(secretária.getSenha()))

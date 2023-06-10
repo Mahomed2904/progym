@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package maps;
+package routes;
 
 import com.google.gson.Gson;
 import controlador.SecretáriaJpaController;
@@ -29,7 +29,7 @@ import utils.Utils;
  *
  * @author mahom
  */
-public class Autenticacao extends HttpServlet {
+public class Autenticar extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -51,7 +51,7 @@ public class Autenticacao extends HttpServlet {
             try {
                 ut = InitialContext.doLookup("java:comp/UserTransaction");
             } catch (NamingException ex) {
-                Logger.getLogger(Autenticacao.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Autenticar.class.getName()).log(Level.SEVERE, null, ex);
             }
             SecretáriaJpaController secretáriaCtrl = new SecretáriaJpaController(ut, emf);
             
@@ -60,6 +60,7 @@ public class Autenticacao extends HttpServlet {
             switch(operacao) {
                 case "aut":
                     {
+                        System.out.println("Autenticando");
                         String email = request.getParameter("email");
                         String senha = request.getParameter("senha");
 
@@ -88,6 +89,14 @@ public class Autenticacao extends HttpServlet {
                         int secretáriaID = (int) sessao.getAttribute("secretariaID");
                         Secretária secretária = secretáriaCtrl.findSecretária(secretáriaID);
                         out.print(Converter.secretáriaToJSON(secretária));
+                    }
+                    break;
+                case "sir":
+                    {
+                        HttpSession sessao = request.getSession();
+                        sessao.removeAttribute("secretariaID");
+                        sessao.removeAttribute("nome");
+                        out.print(new Gson().toJson(new Status(0, "Sessão terminada")));
                     }
             }
         }
