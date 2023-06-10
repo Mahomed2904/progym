@@ -22,6 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -49,13 +50,17 @@ public class Aluno implements Serializable {
     @Basic(optional = false)
     @Column(name = "AlunoID", nullable = false)
     private Integer alunoID;
+    @Size(max = 50)
     @Column(name = "Nome", length = 50)
     private String nome;
     @Column(name = "dataNascimento")
     @Temporal(TemporalType.DATE)
     private Date dataNascimento;
+    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
+    @Size(max = 50)
     @Column(name = "email", length = 50)
     private String email;
+    @Size(max = 100)
     @Column(name = "fotoUrl", length = 100)
     private String fotoUrl;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "alunoID", fetch = FetchType.LAZY)

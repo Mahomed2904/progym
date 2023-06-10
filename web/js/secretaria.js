@@ -1,23 +1,12 @@
 $(function() {
     console.log(window.location.pathname);
-    
     registarEvento($("#lista"), "click", function(){
         window.location = "menu_secretaria.html";
     });
     registarEvento($("#matricula"), "click", function(){
         window.location = "matricular_alunos.html";
     }); 
-    
-    registarEvento($("#pesquisa"), "focus", function() {
-        $("#barra-pesquisa").css("border", "3px solid #4639E0");
-    }); 
-    
-    registarEvento($("#pesquisa"), "focusout", function() {
-        $("#barra-pesquisa").css("border", "2px solid rgb(170, 191, 209)");
-    }); 
-    
-    registarEvento($("#sair"), 'click', terminarSessao);
-    
+
     switch(window.location.pathname) {
         case '/ProGym/':
             {
@@ -166,9 +155,9 @@ function validarFormulario() {
             data: $(this).serialize(),
             dataType: "json",
             success: function(data) {
-                if(data["statusCode"] === 0) {
+                if(data["statusCode"] === 0)
                     window.location = "menu_secretaria.html";
-                } else {
+                else {
                     $("#login-status").text("Email e/ou senha invalidos").addClass("status-message active")
                     .css({"margin": "10px 0px"});
                 }
@@ -241,7 +230,7 @@ function submeterMatricula() {
                alert("Já existe um aluno cadastrado com o email fonecido. Forneca outro email")
             },
             cache: false
-        });
+        })
     }
 }
 
@@ -284,23 +273,6 @@ function salvarPagamento() {
     }
 
     
-}
-
-function terminarSessao() {
-    jQuery.ajax({
-        type: "POST",
-        url: "autenticacao",
-        data: {
-            'op': 'sir'
-        },
-        dataType: "json",
-        success: function(data) {
-            window.location = "/ProGym/";
-        },
-        error: function(e) {
-            alert("Erro");
-        }
-    });
 }
 
 function voltar() {
@@ -359,7 +331,7 @@ function mostrarValorDePagmento() {
                 $("#valor").val(data.valor);
                 return;
             } else {
-                
+                alert(data);
                 let valor = 0;
                 for(let val of data) {
                     valor += Number.parseFloat(val.valor);

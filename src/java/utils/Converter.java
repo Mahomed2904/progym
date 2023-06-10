@@ -56,7 +56,7 @@ public class Converter
         str.append("\"email\":\"").append(aluno.getEmail()).append("\",");
         str.append("\"data\":\"").append(formatarData(aluno.getDataNascimento())).append("\",");
         str.append("\"foto\":\"").append(aluno.getFotoUrl()).append("\",");
-        str.append("\"matricula\":").append(matriculasToJSON(aluno.getMatriculaList())).append("}");
+        str.append("\"matricula\":").append(matriculasToJSON(Utils.findMatriculasOf(aluno.getAlunoID(), matriculas))).append("}");
         return str.toString();
     }
     

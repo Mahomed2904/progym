@@ -20,6 +20,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -43,8 +44,10 @@ public class Atividade implements Serializable {
     @Basic(optional = false)
     @Column(name = "AtividadeID", nullable = false)
     private Integer atividadeID;
+    @Size(max = 100)
     @Column(name = "Nome", length = 100)
     private String nome;
+    @Size(max = 100)
     @Column(name = "Descricao", length = 100)
     private String descricao;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "atividadeID", fetch = FetchType.LAZY)
