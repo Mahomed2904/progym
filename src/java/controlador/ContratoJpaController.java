@@ -5,6 +5,7 @@
 package controlador;
 
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -13,6 +14,7 @@ import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.transaction.UserTransaction;
 import modelo.Contrato;
 import modelo.CoordenaçãoDesportiva;
 import modelo.Professor;
@@ -23,20 +25,22 @@ import modelo.Professor;
  */
 public class ContratoJpaController implements Serializable {
 
-    public ContratoJpaController(EntityManagerFactory emf) {
+    public ContratoJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Contrato contrato) {
+    public void create(Contrato contrato) throws RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             CoordenaçãoDesportiva coordenaçãoDesportivaID = contrato.getCoordenaçãoDesportivaID();
             if (coordenaçãoDesportivaID != null) {
                 coordenaçãoDesportivaID = em.getReference(coordenaçãoDesportivaID.getClass(), coordenaçãoDesportivaID.getCoordenaçãoDesportivaID());
@@ -56,7 +60,14 @@ public class ContratoJpaController implements Serializable {
                 professorID.getContratoList().add(contrato);
                 professorID = em.merge(professorID);
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -64,11 +75,11 @@ public class ContratoJpaController implements Serializable {
         }
     }
 
-    public void edit(Contrato contrato) throws NonexistentEntityException, Exception {
+    public void edit(Contrato contrato) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Contrato persistentContrato = em.find(Contrato.class, contrato.getContratoID());
             CoordenaçãoDesportiva coordenaçãoDesportivaIDOld = persistentContrato.getCoordenaçãoDesportivaID();
             CoordenaçãoDesportiva coordenaçãoDesportivaIDNew = contrato.getCoordenaçãoDesportivaID();
@@ -99,8 +110,13 @@ public class ContratoJpaController implements Serializable {
                 professorIDNew.getContratoList().add(contrato);
                 professorIDNew = em.merge(professorIDNew);
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = contrato.getContratoID();
@@ -116,11 +132,11 @@ public class ContratoJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws NonexistentEntityException {
+    public void destroy(Integer id) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Contrato contrato;
             try {
                 contrato = em.getReference(Contrato.class, id);
@@ -139,7 +155,14 @@ public class ContratoJpaController implements Serializable {
                 professorID = em.merge(professorID);
             }
             em.remove(contrato);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

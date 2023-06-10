@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Pagamento;
 
 /**
@@ -27,16 +29,18 @@ import modelo.Pagamento;
  */
 public class PagamentoJpaController implements Serializable {
 
-    public PagamentoJpaController(EntityManagerFactory emf) {
+    public PagamentoJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Pagamento pagamento) throws IllegalOrphanException {
+    public void create(Pagamento pagamento) throws IllegalOrphanException, RollbackFailureException, Exception {
         List<String> illegalOrphanMessages = null;
         Cobranca cobrancaIDOrphanCheck = pagamento.getCobrancaID();
         if (cobrancaIDOrphanCheck != null) {
@@ -53,8 +57,8 @@ public class PagamentoJpaController implements Serializable {
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Aluno alunoID = pagamento.getAlunoID();
             if (alunoID != null) {
                 alunoID = em.getReference(alunoID.getClass(), alunoID.getAlunoID());
@@ -92,7 +96,14 @@ public class PagamentoJpaController implements Serializable {
                 secretáriaID.getPagamentoList().add(pagamento);
                 secretáriaID = em.merge(secretáriaID);
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -100,11 +111,11 @@ public class PagamentoJpaController implements Serializable {
         }
     }
 
-    public void edit(Pagamento pagamento) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Pagamento pagamento) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Pagamento persistentPagamento = em.find(Pagamento.class, pagamento.getPagamentoID());
             Aluno alunoIDOld = persistentPagamento.getAlunoID();
             Aluno alunoIDNew = pagamento.getAlunoID();
@@ -176,8 +187,13 @@ public class PagamentoJpaController implements Serializable {
                 secretáriaIDNew.getPagamentoList().add(pagamento);
                 secretáriaIDNew = em.merge(secretáriaIDNew);
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = pagamento.getPagamentoID();
@@ -193,11 +209,11 @@ public class PagamentoJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws NonexistentEntityException {
+    public void destroy(Integer id) throws NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Pagamento pagamento;
             try {
                 pagamento = em.getReference(Pagamento.class, id);
@@ -226,7 +242,14 @@ public class PagamentoJpaController implements Serializable {
                 secretáriaID = em.merge(secretáriaID);
             }
             em.remove(pagamento);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

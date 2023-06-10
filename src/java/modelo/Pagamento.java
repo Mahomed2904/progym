@@ -22,6 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -56,8 +57,10 @@ public class Pagamento implements Serializable {
     private Double taxa;
     @Column(name = "Valor", precision = 22, scale = 0)
     private Double valor;
+    @Size(max = 200)
     @Column(name = "CodigoRecibo", length = 200)
     private String codigoRecibo;
+    @Size(max = 50)
     @Column(name = "Banco", length = 50)
     private String banco;
     @JoinColumn(name = "AlunoID", referencedColumnName = "AlunoID")

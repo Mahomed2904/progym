@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Cobranca;
 
 /**
@@ -25,20 +27,22 @@ import modelo.Cobranca;
  */
 public class CobrancaJpaController implements Serializable {
 
-    public CobrancaJpaController(EntityManagerFactory emf) {
+    public CobrancaJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Cobranca cobranca) {
+    public void create(Cobranca cobranca) throws RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Pagamento pagamento = cobranca.getPagamento();
             if (pagamento != null) {
                 pagamento = em.getReference(pagamento.getClass(), pagamento.getPagamentoID());
@@ -63,7 +67,14 @@ public class CobrancaJpaController implements Serializable {
                 matriculaID.getCobrancaList().add(cobranca);
                 matriculaID = em.merge(matriculaID);
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -71,11 +82,11 @@ public class CobrancaJpaController implements Serializable {
         }
     }
 
-    public void edit(Cobranca cobranca) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Cobranca cobranca) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Cobranca persistentCobranca = em.find(Cobranca.class, cobranca.getCobrancaID());
             Pagamento pagamentoOld = persistentCobranca.getPagamento();
             Pagamento pagamentoNew = cobranca.getPagamento();
@@ -117,8 +128,13 @@ public class CobrancaJpaController implements Serializable {
                 matriculaIDNew.getCobrancaList().add(cobranca);
                 matriculaIDNew = em.merge(matriculaIDNew);
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = cobranca.getCobrancaID();
@@ -134,11 +150,11 @@ public class CobrancaJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Cobranca cobranca;
             try {
                 cobranca = em.getReference(Cobranca.class, id);
@@ -163,7 +179,14 @@ public class CobrancaJpaController implements Serializable {
                 matriculaID = em.merge(matriculaID);
             }
             em.remove(cobranca);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

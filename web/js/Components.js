@@ -146,7 +146,7 @@ class Matricula extends React.Component {
                     </div>
                 : 
                     <div className="info-botao">
-                        <button className="paga">Informações do pagamento</button>
+                        <button className="paga" onClick={this.pagamento}>Informações do pagamento</button>
                     </div>
                 }
                 </div>
@@ -188,7 +188,7 @@ class Atividades extends React.Component {
         return (
             this.props.atividades.map( function(atividade) {
                 
-                return <option key={atividade.AtividadeID} value={atividade.AtividadeID}>{atividade.nome}</option>
+                return <option value={atividade.AtividadeID}>{atividade.nome}</option>
             })
         )
     }
@@ -291,50 +291,22 @@ function exibirMatriculas()
         url: "matricula",
         data: "op=fnd",
         dataType: "json",
-        success: function(data) {   
-            if(data.codigo === 0) {
+        success: function(data) {
+            if(data.matricula.length > 0) {
+                console.log(data)
                 let container = document.getElementById("dados-pessoais");
                 let root = ReactDOM.createRoot(container);
-                root.render(<DadosPessoais aluno={data.aluno}></DadosPessoais>);
+                root.render(<DadosPessoais aluno={data}></DadosPessoais>);
                 
                 container = document.getElementById("lista-matriculas");
                 root = ReactDOM.createRoot(container);
-                root.render(<Matriculas matriculas={data.aluno.matriculas}></Matriculas>);
-            } else if(data.codigo === 2) {
-                window.location = "/ProGym/";
+                root.render(<Matriculas matriculas={data.matricula}></Matriculas>);
             }
         },
         error: function(e) {
             alert("erro na formatacao do json");
         }
     }); 
-}
-
-function listarDeAlunos() {
-    jQuery.ajax({
-        type: "GET",
-        url: "matricula",
-        data: "op=eps",
-        dataType: "json",
-        success: function(data) {
-            if(data.codigo === 0) {
-                console.log(data.pesquisa);
-                $("#pesquisa").val(data.pesquisa.nome);
-                $("#mensalidades").val(data.pesquisa.mensalidade);
-                $("#atividades").val(data.pesquisa.atividade);
-                $("#matriculas").val(data.pesquisa.matricula);
-                console.log([$("#pesquisa").val(), $("#mensalidades").val(), $("#atividades").val(), $("#matriculas").val()]);
-                pesquisaEFiltro();
-            } else if(data.codigo === 1) {
-                exibirListAlunos();
-            } else {
-                window.location = '/ProGym/';
-            }
-        },
-        error: function(e) {
-            alert("erro na formatacao do json");
-        }
-    });
 }
 
 function exibirListAlunos() {
@@ -344,10 +316,12 @@ function exibirListAlunos() {
         data: "op=lst",
         dataType: "json",
         success: function(data) {
-            if(data.codigo === 0) {
+            
+            if(data.length > 0) {
+                console.log(data)
                 const container = document.getElementById("lista-alunos");
                 const root = ReactDOM.createRoot(container);
-                root.render(<Alunos alunos={data.alunos}></Alunos>);
+                root.render(<Alunos alunos={data}></Alunos>);
             } else {
                 window.location = '/ProGym/';
             }
@@ -365,65 +339,16 @@ function exibeAtividades() {
         data: "op=act",
         dataType: "json",
         success: function(data) {
-            if(data.codigo === 0) {
+            
+            if(data.length > 0) {
+                console.log(data)
                 const container = document.getElementById("acts");
                 const root = ReactDOM.createRoot(container);
-                root.render(<Atividades atividades={data.atividades}></Atividades>);
+                root.render(<Atividades atividades={data}></Atividades>);
             }
         },
         error: function(e) {
             alert("erro");
-        }
-    })
-}
-
-function exibeAtividades2() { 
-    jQuery.ajax({
-        type: "GET",
-        url: "matricula",
-        data: "op=act",
-        dataType: "json",
-        success: function(data) {
-            if(data.codigo === 0) {
-                data.atividades.unshift({AtividadeID: 0, nome: "Todas"});
-                const container = document.getElementById("atividades");
-                const root = ReactDOM.createRoot(container);
-                root.render(<Atividades atividades={data.atividades}></Atividades>);
-                listarDeAlunos();
-            } else {
-                window.location = '/ProGym/';
-            }
-        },
-        error: function(e) {
-            alert("erro");
-        }
-    })
-}
-
-function pesquisaEFiltro() {
-                    console.log([$("#pesquisa").val(), $("#mensalidades").val(), $("#atividades").val(), $("#matriculas").val()]);
-    jQuery.ajax({
-        type: "GET",
-        url: "matricula",
-        data: {
-            op: "pes",
-            pesquisa: $("#pesquisa").val(),
-            mensalidade: $("#mensalidades").val(),
-            atividade: $("#atividades").val(),
-            matricula: $("#matriculas").val()
-        },
-        dataType: "json",
-        success: function(data) {
-            const container = document.getElementById("lista-alunos");
-            const root = ReactDOM.createRoot(container);
-            if(data.codigo === 0) {
-                root.render(<Alunos alunos={data.alunos}></Alunos>);
-            } else {
-                root.render(<div class="alinhadorVertical"><div class="alinhadorHorizontal"><h1>{data.mensagem}</h1></div></div>);
-            }
-        },
-        error: function(e) {
-            alert("Erro");
         }
     })
 }
@@ -431,13 +356,10 @@ function pesquisaEFiltro() {
 $(function() {
     console.log(window.location.pathname);
     console.log("Aqui");
+    
     switch(window.location.pathname) {
         case '/ProGym/menu_secretaria.html':
-            exibeAtividades2();
-            $("#pesquisa").keyup(pesquisaEFiltro);
-            $("#mensalidades").change(pesquisaEFiltro),
-            $("#atividades").change(pesquisaEFiltro),
-            $("#matriculas").change(pesquisaEFiltro);
+            exibirListAlunos();
             break;
         case '/ProGym/matricular_alunos.html':
             exibeAtividades();
@@ -446,4 +368,4 @@ $(function() {
             exibirMatriculas();
             break;
     }       
-});
+})

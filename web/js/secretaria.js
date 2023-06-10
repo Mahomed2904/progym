@@ -1,23 +1,12 @@
 $(function() {
     console.log(window.location.pathname);
-    
     registarEvento($("#lista"), "click", function(){
         window.location = "menu_secretaria.html";
     });
     registarEvento($("#matricula"), "click", function(){
         window.location = "matricular_alunos.html";
     }); 
-    
-    registarEvento($("#pesquisa"), "focus", function() {
-        $("#barra-pesquisa").css("border", "3px solid #4639E0");
-    }); 
-    
-    registarEvento($("#pesquisa"), "focusout", function() {
-        $("#barra-pesquisa").css("border", "2px solid rgb(170, 191, 209)");
-    }); 
-    
-    registarEvento($("#sair"), 'click', terminarSessao);
-    
+
     switch(window.location.pathname) {
         case '/ProGym/':
             {
@@ -82,18 +71,6 @@ $(function() {
                     registarEvento($("#foto"), "change", function() {
                         validarElemento(this, null, $("#foto-status")[0], "", "Insira uma foto valida");
                     })
-                    
-                    registarEvento($("#foto"), "change", function() {
-                        validarElemento(this, null, $("#foto-status")[0], "", "Insira uma foto valida");
-                        //console.log(this.file);
-                        if(this.files.length > 0) {
-                            //console.log(this.files[0]);
-                            $("#div-foto").css({
-                                "background-image": "url(" + URL.createObjectURL(this.files[0]) + ")",
-                                "background-size": "100% 100%",
-                            });
-                        }
-                    });
                     
                     mostrarValorDePagmento();
                 }
@@ -166,23 +143,21 @@ function validaRecibo(elemento) {
 
 function validarFormulario() {
     var bool = true;
-    
-    event.preventDefault(); 
     bool = validarElemento($("#email")[0], null, $("#email-status"), "", "Insira um email valido" ) && bool;
     bool = validarElemento($("#senha")[0], null, $("#senha-status"), "","Insira uma senha valida" ) && bool;
 
     if(bool)
     {
+        event.preventDefault();
         jQuery.ajax({
             type: "GET",
             url: this.action,
             data: $(this).serialize(),
             dataType: "json",
             success: function(data) {
-                console.log(data)
-                if(Number.parseInt(data.codigo) === 0) {
+                if(data["statusCode"] === 0)
                     window.location = "menu_secretaria.html";
-                } else {
+                else {
                     $("#login-status").text("Email e/ou senha invalidos").addClass("status-message active")
                     .css({"margin": "10px 0px"});
                 }
@@ -191,9 +166,9 @@ function validarFormulario() {
                 $("#login-status").text(e.toString()).addClass("status-message active")
                     .css({"margin": "10px 0px"});
             }
-        });
+        })
     } else {
-        $("#login-status").text("É obrigatório preenher o formulario").addClass("status-message active")
+        $("#login-status").text("E obrigatorio preenher o formulario").addClass("status-message active")
         .css({"margin": "10px 0px"});
     }
     
@@ -214,8 +189,9 @@ function submeterMatricula() {
         z.selected = true;
     }
     
-    if(bool) { // Será true se todos os campos forem válidos
+    if(bool) {
         let formData = new FormData($("#matricula-form")[0]);
+        
         $.ajax({
             type: "POST",
             url: $("#matricula-form")[0].action,
@@ -226,19 +202,20 @@ function submeterMatricula() {
             processData: false,
             contentType: false,
             success: function(data) {
-                if(data.codigo === 0) {
-                    let id = data.aluno.id;
+                if(data['statusCode'] === 0) {
+                    let id = data.message.split('#')[1];
+                    console.log(id);
                     // Guarda na sessão o código do aluno a exibir suas informacoes
                     jQuery.ajax({
                         type: "POST",
                         url: "matricula",
                         data: {
                             'op': 'str',
-                            'alunoID': data.aluno.id
+                            'alunoID': id
                         },
                         dataType: "json",
                         success: function(data) {
-                            alert(data.mensagem);
+                            alert(id);
                             window.location = "info_aluno.html";
                         },
                         error: function(e) {
@@ -246,14 +223,14 @@ function submeterMatricula() {
                         }
                     });
                 } else {
-                    alert(data.mensagem);
+                    alert(data['message']);
                 }
             },
             error: function(e) {
-               alert("Erro");
+               alert("Já existe um aluno cadastrado com o email fonecido. Forneca outro email")
             },
             cache: false
-        });
+        })
     }
 }
 
@@ -279,16 +256,16 @@ function salvarPagamento() {
             processData: false,
             contentType: false,
             success: function(data) {
-                if(data.codigo === 0) {
-                    alert(data.mensagem);
+                if(data['statusCode'] === 0) {
+                    alert("Pagamento efetuado com sucesso");
                     window.location = "info_aluno.html";
                 } else {
-                    alert(data.mensagem);
+                    alert(data['message']);
                     window.location = "info_aluno.html";
                 }
             },
             error: function(e) {
-               alert("Ocorreu um erro");
+               alert("O pagamento para esta conta já foi feito.");
                window.location = "info_aluno.html";
             },
             cache: false
@@ -296,23 +273,6 @@ function salvarPagamento() {
     }
 
     
-}
-
-function terminarSessao() {
-    jQuery.ajax({
-        type: "POST",
-        url: "autenticacao",
-        data: {
-            'op': 'sir'
-        },
-        dataType: "json",
-        success: function(data) {
-            window.location = "/ProGym/";
-        },
-        error: function(e) {
-            alert("Erro");
-        }
-    });
 }
 
 function voltar() {
@@ -359,29 +319,27 @@ function tirarTodos() {
 
 function mostrarValorDePagmento() {
      jQuery.ajax({
-        type: "GET",
+        type: "POST",
         url: "matricula",
         data: {
             'op': 'rec'
         },
         dataType: "json",
         success: function(data) {
-            if(data.codigo === 0) {
-                if(data.cobranca) {
-                    $("#montante").text(data.cobranca.valor + " MZN");
-                    $("#valor").val(data.cobranca.valor);
-                    return;
-                } else {
-                    let valor = 0;
-                    for(let val of data.cobrancas) {
-                        valor += Number.parseFloat(val.valor);
-                    }
-                    $("#montante").text(valor + " MZN");
-                    $("#valor").val(valor);
+            if(data.cobrancaID) {
+                $("#montante").text(data.valor + " MZN");
+                $("#valor").val(data.valor);
+                return;
+            } else {
+                alert(data);
+                let valor = 0;
+                for(let val of data) {
+                    valor += Number.parseFloat(val.valor);
                 }
-            } else if(data.codigo === 2) {
-                window.location = "/ProGym/";
+                $("#montante").text(valor + " MZN");
+                $("#valor").val(valor);
             }
+            
         },
         error: function(e) {
             alert("Erro");

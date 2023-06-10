@@ -6,6 +6,7 @@ package controlador;
 
 import controlador.exceptions.IllegalOrphanException;
 import controlador.exceptions.NonexistentEntityException;
+import controlador.exceptions.RollbackFailureException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.UserTransaction;
 import modelo.Atividade;
 
 /**
@@ -27,23 +29,25 @@ import modelo.Atividade;
  */
 public class AtividadeJpaController implements Serializable {
 
-    public AtividadeJpaController(EntityManagerFactory emf) {
+    public AtividadeJpaController(UserTransaction utx, EntityManagerFactory emf) {
+        this.utx = utx;
         this.emf = emf;
     }
+    private UserTransaction utx = null;
     private EntityManagerFactory emf = null;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
 
-    public void create(Atividade atividade) {
+    public void create(Atividade atividade) throws RollbackFailureException, Exception {
         if (atividade.getMatriculaList() == null) {
             atividade.setMatriculaList(new ArrayList<Matricula>());
         }
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             CoordenaçãoDesportiva coordenaçãoDesportivaID = atividade.getCoordenaçãoDesportivaID();
             if (coordenaçãoDesportivaID != null) {
                 coordenaçãoDesportivaID = em.getReference(coordenaçãoDesportivaID.getClass(), coordenaçãoDesportivaID.getCoordenaçãoDesportivaID());
@@ -87,7 +91,14 @@ public class AtividadeJpaController implements Serializable {
                     oldAtividadeIDOfMatriculaListMatricula = em.merge(oldAtividadeIDOfMatriculaListMatricula);
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -95,11 +106,11 @@ public class AtividadeJpaController implements Serializable {
         }
     }
 
-    public void edit(Atividade atividade) throws IllegalOrphanException, NonexistentEntityException, Exception {
+    public void edit(Atividade atividade) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Atividade persistentAtividade = em.find(Atividade.class, atividade.getAtividadeID());
             CoordenaçãoDesportiva coordenaçãoDesportivaIDOld = persistentAtividade.getCoordenaçãoDesportivaID();
             CoordenaçãoDesportiva coordenaçãoDesportivaIDNew = atividade.getCoordenaçãoDesportivaID();
@@ -176,8 +187,13 @@ public class AtividadeJpaController implements Serializable {
                     }
                 }
             }
-            em.getTransaction().commit();
+            utx.commit();
         } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = atividade.getAtividadeID();
@@ -193,11 +209,11 @@ public class AtividadeJpaController implements Serializable {
         }
     }
 
-    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException {
+    public void destroy(Integer id) throws IllegalOrphanException, NonexistentEntityException, RollbackFailureException, Exception {
         EntityManager em = null;
         try {
+            utx.begin();
             em = getEntityManager();
-            em.getTransaction().begin();
             Atividade atividade;
             try {
                 atividade = em.getReference(Atividade.class, id);
@@ -232,7 +248,14 @@ public class AtividadeJpaController implements Serializable {
                 professorID = em.merge(professorID);
             }
             em.remove(atividade);
-            em.getTransaction().commit();
+            utx.commit();
+        } catch (Exception ex) {
+            try {
+                utx.rollback();
+            } catch (Exception re) {
+                throw new RollbackFailureException("An error occurred attempting to roll back the transaction.", re);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();

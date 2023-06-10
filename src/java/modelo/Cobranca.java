@@ -22,6 +22,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -54,12 +55,15 @@ public class Cobranca implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataTermino;
     @Basic(optional = false)
+    @NotNull
     @Column(name = "Taxa", nullable = false)
     private float taxa;
     @Basic(optional = false)
+    @NotNull
     @Column(name = "Valor", nullable = false)
     private float valor;
     @Basic(optional = false)
+    @NotNull
     @Column(name = "Pago", nullable = false)
     private boolean pago;
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "cobrancaID", fetch = FetchType.LAZY)
