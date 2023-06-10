@@ -5,18 +5,13 @@
         <group>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/src/conf/MANIFEST.MF</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/web/WEB-INF/web.xml</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/controlador/AlunoJpaController.java</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/js/secretaria.js</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/index.html</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/maps/Autenticacao.java</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/pagamento_mensalidade.html</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/maps/Mensalidade.java</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/matricular_alunos.html</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/utils/Converter.java</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/info_aluno.html</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/web/js/Components.js</file>
+            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/js/secretaria.js</file>
+            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/maps/Autenticacao.java</file>
+            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/maps/Mensalidade.java</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/web/menu_secretaria.html</file>
-            <file>file:/home/mahomed/NetBeansProjects/ProGym/web/styles/secretaria.css</file>
+            <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/servicos/GestaoAluno.java</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/utils/Utils.java</file>
             <file>file:/home/mahomed/NetBeansProjects/ProGym/src/java/maps/Matricular.java</file>
         </group>

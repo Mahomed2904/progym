@@ -18,8 +18,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -44,18 +42,12 @@ public class Secretária implements Serializable {
     @Basic(optional = false)
     @Column(name = "Secret\u00e1riaID", nullable = false)
     private Integer secretáriaID;
-    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
     @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 100)
     @Column(name = "email", nullable = false, length = 100)
     private String email;
     @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 100)
     @Column(name = "senha", nullable = false, length = 100)
     private String senha;
-    @Size(max = 50)
     @Column(name = "Nome", length = 50)
     private String nome;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "secret\u00e1riaID", fetch = FetchType.LAZY)

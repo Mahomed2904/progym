@@ -15,15 +15,15 @@
     </servlet-mapping>
     <servlet>
         <servlet-name>matricula</servlet-name>
-        <servlet-class>routes.Matricular</servlet-class>
+        <servlet-class>maps.Matricular</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>pagamento</servlet-name>
-        <servlet-class>routes.Mensalidade</servlet-class>
+        <servlet-class>maps.Mensalidade</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>autenticacao</servlet-name>
-        <servlet-class>routes.Autenticar</servlet-class>
+        <servlet-class>maps.Autenticacao</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>matricula</servlet-name>

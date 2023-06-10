@@ -9,8 +9,12 @@ $(function() {
     }); 
     
     registarEvento($("#pesquisa"), "focus", function() {
-        $("#barra-pesquisa").css("border-color", "red");
-    });     
+        $("#barra-pesquisa").css("border", "3px solid #4639E0");
+    }); 
+    
+    registarEvento($("#pesquisa"), "focusout", function() {
+        $("#barra-pesquisa").css("border", "2px solid rgb(170, 191, 209)");
+    }); 
     
     registarEvento($("#sair"), 'click', terminarSessao);
     
@@ -237,7 +241,7 @@ function submeterMatricula() {
                alert("Já existe um aluno cadastrado com o email fonecido. Forneca outro email")
             },
             cache: false
-        })
+        });
     }
 }
 

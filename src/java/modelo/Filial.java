@@ -23,7 +23,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -54,7 +53,6 @@ public class Filial implements Serializable {
     @Column(name = "Horatermino")
     @Temporal(TemporalType.TIME)
     private Date horatermino;
-    @Size(max = 30)
     @Column(name = "Localizacao", length = 30)
     private String localizacao;
     @JoinColumn(name = "Coordena\u00e7\u00e3oDesportivaID", referencedColumnName = "Coordena\u00e7\u00e3oDesportivaID", nullable = false)

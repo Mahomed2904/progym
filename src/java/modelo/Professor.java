@@ -18,7 +18,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -41,7 +40,6 @@ public class Professor implements Serializable {
     @Basic(optional = false)
     @Column(name = "ProfessorID", nullable = false)
     private Integer professorID;
-    @Size(max = 50)
     @Column(name = "Nome", length = 50)
     private String nome;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "professorID", fetch = FetchType.LAZY)
